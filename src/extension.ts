@@ -53,12 +53,15 @@ export function activate(context: vscode.ExtensionContext) {
       /^[\t ]*(((\/\/|\#)[\t ]*([A-Z][A-Z0-9\t _-]+)[\t ]*:)[\t ]*[^-])(.*)$/gm;
     const lineMarkRegex =
       /^[\t ]*((\/\/|\#)[\t ]*([A-Z][A-Z0-9\t _-]+)[\t ]*:[\t ]*-)(.*)$/gm;
+    const pragmaMarkRegex =
+      /^\#pragma mark - (.*)$/gm;
 
     // const simpleMarkRegex = /(((\/\/|\#)\s*([A-Z][A-Z0-9_-\s]+)\s*:)\s*[^-])/g;
     // const lineMarkRegex = /((\/\/|\#)\s*([A-Z][A-Z0-9_-\s]+)\s*:\s*-)/g;
 
     const simpleMarks: vscode.DecorationOptions[] = [];
     const lineMarks: vscode.DecorationOptions[] = [];
+    const pragmaMarks: vscode.DecorationOptions[] = [];
     const marksBold: vscode.DecorationOptions[] = [];
 
     // MARK: - Match simple marks
@@ -82,6 +85,23 @@ export function activate(context: vscode.ExtensionContext) {
 
     match = null;
     while ((match = lineMarkRegex.exec(text))) {
+      const startPos = activeEditor.document.positionAt(match.index);
+      const endPos = activeEditor.document.positionAt(
+        match.index + match[0].length
+      );
+
+      const decoration = {
+        range: new vscode.Range(startPos, endPos),
+      };
+
+      lineMarks.push(decoration);
+      marksBold.push(decoration);
+    }
+
+    // MARK: - Match marks with #pragma mark
+
+    match = null;
+    while ((match = pragmaMarkRegex.exec(text))) {
       const startPos = activeEditor.document.positionAt(match.index);
       const endPos = activeEditor.document.positionAt(
         match.index + match[0].length
